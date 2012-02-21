@@ -25,6 +25,10 @@ public class OpenmrsReportingStepData extends BaseStepData implements StepDataIn
 
 	private RestClient restClient;
 	
+	public OpenmrsReportingStepData() {
+		super();
+	}
+	
     /**
      * @return the restClient
      */

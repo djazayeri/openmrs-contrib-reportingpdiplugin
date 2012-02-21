@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<plugin
+
+   id="OpenmrsReportingLookup"
+   iconfile="openmrs_logo_tiny.png"
+   description="OpenMRS Reporting Lookup"
+   tooltip="Looks up (and generates) an OpenMRS Reporting Data Set"
+   category="Input"
+   classname="org.openmrs.pentaho.plugin.reporting.OpenmrsReportingStepMeta">
+
+        <libraries>
+            <library name="lib/*.jar"/>
+        </libraries>
+ 
+</plugin>

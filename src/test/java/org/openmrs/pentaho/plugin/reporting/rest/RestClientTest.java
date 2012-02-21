@@ -13,6 +13,9 @@
  */
 package org.openmrs.pentaho.plugin.reporting.rest;
 
+import java.util.List;
+import java.util.Map;
+
 import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Test;
 
@@ -25,10 +28,14 @@ public class RestClientTest {
 	@Test
 	public void shouldListDataSetDefinitions() throws Exception {
 		RestClient client = new RestClient("http://localhost:8018/openmrs18", "admin", "test");
-		//List<Map<String, Object>> definitions = client.listDataSetDefinitions(null);
-		//printAsJson(definitions);
+		List<Map<String, Object>> definitions = client.listDataSetDefinitions(null);
+		printAsJson(definitions);
+	}
+	
+	@Test
+	public void shouldRetrieveOneDataSetDefinition() throws Exception {
+		RestClient client = new RestClient("http://localhost:8018/openmrs18", "admin", "test");
 		SimpleObject dsd = client.getDataSetDefinition("7df8c778-2578-4573-b360-6373197d5cd1");
-		System.out.println("Result >>>");
 		printAsJson(dsd);
 	}
 

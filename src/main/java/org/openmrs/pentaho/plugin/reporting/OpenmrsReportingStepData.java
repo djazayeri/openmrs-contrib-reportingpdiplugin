@@ -13,7 +13,12 @@
  */
 package org.openmrs.pentaho.plugin.reporting;
 
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+
 import org.openmrs.pentaho.plugin.reporting.rest.RestClient;
+import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.trans.step.BaseStepData;
 import org.pentaho.di.trans.step.StepDataInterface;
 
@@ -23,24 +28,12 @@ import org.pentaho.di.trans.step.StepDataInterface;
  */
 public class OpenmrsReportingStepData extends BaseStepData implements StepDataInterface {
 
-	private RestClient restClient;
+	public RestClient restClient;
+	public RowMetaInterface outputRowMeta;
+	public Iterator<Map<String, Object>> dsdIterator;
 	
 	public OpenmrsReportingStepData() {
 		super();
 	}
-	
-    /**
-     * @return the restClient
-     */
-    public RestClient getRestClient() {
-    	return restClient;
-    }
-	
-    /**
-     * @param restClient the restClient to set
-     */
-    public void setRestClient(RestClient restClient) {
-    	this.restClient = restClient;
-    }
 	
 }

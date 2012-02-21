@@ -13,7 +13,14 @@
  */
 package org.openmrs.pentaho.plugin.reporting;
 
+import java.util.List;
+import java.util.Map;
+
 import org.openmrs.pentaho.plugin.reporting.rest.RestClient;
+import org.pentaho.di.core.exception.KettleException;
+import org.pentaho.di.core.exception.KettleStepException;
+import org.pentaho.di.core.row.RowDataUtil;
+import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.trans.Trans;
 import org.pentaho.di.trans.TransMeta;
 import org.pentaho.di.trans.step.BaseStep;
@@ -52,10 +59,10 @@ public class OpenmrsReportingStep extends BaseStep implements StepInterface {
         meta = (OpenmrsReportingStepMeta) smi;
         data = (OpenmrsReportingStepData) sdi;
         
-        data.setRestClient(new RestClient(environmentSubstitute(meta.getOpenmrsServerUrl()),
-        	environmentSubstitute(meta.getUsername()), environmentSubstitute(meta.getPassword())));
+        data.restClient = new RestClient(environmentSubstitute(meta.getOpenmrsServerUrl()),
+        	environmentSubstitute(meta.getUsername()), environmentSubstitute(meta.getPassword()));
         
-        if (!data.getRestClient().testConnection())
+        if (!data.restClient.testConnection())
         	return false;
         
         return super.init(smi, sdi);
@@ -66,8 +73,48 @@ public class OpenmrsReportingStep extends BaseStep implements StepInterface {
      */
     @Override
     public void dispose(StepMetaInterface smi, StepDataInterface sdi) {
-        data.setRestClient(null);
+        data.restClient = null;
         super.dispose(smi, sdi);
+    }
+    
+    
+    
+    /**
+     * @see org.pentaho.di.trans.step.BaseStep#processRow(org.pentaho.di.trans.step.StepMetaInterface, org.pentaho.di.trans.step.StepDataInterface)
+     */
+    @Override
+    public boolean processRow(StepMetaInterface smi, StepDataInterface sdi) throws KettleException {
+    	meta = (OpenmrsReportingStepMeta) smi;
+    	data = (OpenmrsReportingStepData) sdi;
+    	
+        // this is an input-only step, so we're not waiting for any input (and ignoring any that exists)
+    	if (first) {
+    		first = false;
+    		try {
+    			// prepare output field structure
+    			data.outputRowMeta = (RowMetaInterface) getInputRowMeta().clone();
+    			meta.getFields(data.outputRowMeta, getStepname(), null, null, this);
+    			
+    			// hit the webservice and store the result to be processed in subsequent calls to this method
+	            data.dsdIterator = data.restClient.listDataSetDefinitions(null).iterator();
+	            if (!data.dsdIterator.hasNext())
+	            	return false;
+            }
+            catch (Exception e) {
+	            throw new KettleStepException(e);
+            }
+    	}
+    	
+    	// fetch the next item to process
+    	Map<String, Object> item = data.dsdIterator.next();
+    	
+    	// write it to the output
+    	Object[] outputRow = new Object[data.outputRowMeta.size()];
+    	outputRow[0] = item.get("uuid");
+    	outputRow[1] = item.get("display");
+    	putRow(data.outputRowMeta, outputRow);
+    	
+    	return data.dsdIterator.hasNext();
     }
 	
 }

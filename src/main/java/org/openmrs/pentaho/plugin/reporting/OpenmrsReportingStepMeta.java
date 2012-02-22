@@ -152,8 +152,11 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
      */
     @Override
     public String getXML() throws KettleException {
-    	// TODO escape vars
-        return "<openmrsReportingStep openmrsServerUrl=\"" + openmrsServerUrl + "\" username=\"" + username + "\" password=\"" + password + "\"/>";
+    	StringBuilder ret = new StringBuilder();
+    	ret.append("    ").append(XMLHandler.addTagValue("openmrsServerUrl", openmrsServerUrl));
+    	ret.append("    ").append(XMLHandler.addTagValue("username", username));
+    	ret.append("    ").append(XMLHandler.addTagValue("password", password));
+    	return ret.toString();
     }
     
 	/**

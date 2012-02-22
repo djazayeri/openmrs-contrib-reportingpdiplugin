@@ -118,6 +118,8 @@ public class OpenmrsReportingStep extends BaseStep implements StepInterface {
             		logBasic("Wrote " + rowsWritten + " rows");
             		
             }
+            
+            setOutputDone();
             return false;
         }
         catch (Exception e) {

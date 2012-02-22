@@ -78,13 +78,21 @@ public class RestClient {
 		return getReportingResource().path(resourceName);
 	}
 	
-	public List<Map<String, Object>> listDataSetDefinitions(String queryParam) throws Exception {
+	public List<Map<String, Object>> searchDataSetDefinitions(String queryParam) throws Exception {
+		if (queryParam == null)
+			queryParam = "";
 		WebResource resource = getResource("datasetdefinition");
 		resource.accept(MediaType.APPLICATION_JSON_TYPE);
-		if (queryParam != null)
-			resource.queryParam("q", queryParam);
+		resource.queryParam("q", queryParam);
 		String json = resource.get(String.class);
-		return handleResultList(json);
+		return handleSearchResults(json);
+	}
+	
+	public List<Map<String, Object>> getAllDataSetDefinitions() throws Exception {
+		WebResource resource = getResource("datasetdefinition");
+		resource.accept(MediaType.APPLICATION_JSON_TYPE);
+		String json = resource.get(String.class);
+		return handleJsonList(json);
 	}
 	
     public SimpleObject getDataSetDefinition(String uuid) throws Exception {
@@ -99,7 +107,11 @@ public class RestClient {
     	return new ObjectMapper().readValue(json, SimpleObject.class);
     }
 	
-	private static List<Map<String, Object>> handleResultList(String json) throws Exception {
+	private static List<Map<String, Object>> handleJsonList(String json) throws Exception {
+		return new ObjectMapper().readValue(json, List.class);
+	}
+	
+	private static List<Map<String, Object>> handleSearchResults(String json) throws Exception {
     	Map<String, Object> object = handleJsonObject(json);
     	return (List<Map<String, Object>>) object.get("results");
     }

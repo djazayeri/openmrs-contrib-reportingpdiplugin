@@ -16,11 +16,11 @@ package org.openmrs.pentaho.plugin.reporting;
 import java.util.List;
 import java.util.Map;
 
+import org.openmrs.pentaho.plugin.reporting.rest.RestClient;
 import org.pentaho.di.core.CheckResult;
 import org.pentaho.di.core.CheckResultInterface;
 import org.pentaho.di.core.Const;
 import org.pentaho.di.core.Counter;
-import org.pentaho.di.core.annotations.Step;
 import org.pentaho.di.core.database.DatabaseMeta;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettleStepException;
@@ -45,12 +45,6 @@ import org.w3c.dom.Node;
 /**
  *
  */
-@Step(
-	id="OpenmrsReporting",
-	name="OpenMRS Reporting",
-	description="Connect to Reporting Web Services on an OpenMRS server",
-	categoryDescription="Input",
-	image="")
 public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaInterface {
 
 	private String openmrsServerUrl;
@@ -120,7 +114,11 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
 	    } else {
 	    	remarks.add(new CheckResult(CheckResult.TYPE_RESULT_OK, "Password is set", stepMeta));
 	    }
-	    // TODO should I test the web service connection?
+	    if (!new RestClient(openmrsServerUrl, username, password).testConnection()) {
+	    	remarks.add(new CheckResult(CheckResult.TYPE_RESULT_ERROR, "Failed to connect to web service with these settings", stepMeta));
+	    } else {
+	    	remarks.add(new CheckResult(CheckResult.TYPE_RESULT_OK, "Successfully tested Web Service", stepMeta));
+	    }
     }
 
 	/**
@@ -195,6 +193,8 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
     @Override
     public void getFields(RowMetaInterface inputRowMeta, String name, RowMetaInterface[] info, StepMeta nextStep,
                           VariableSpace space) throws KettleStepException {
+    	// this is an input-only step--nothing should be passed into us, but if it is, we clear it
+    	inputRowMeta.clear();
     	{
 	        ValueMetaInterface field = new ValueMeta("uuid", ValueMetaInterface.TYPE_STRING);
 	        field.setOrigin(name);

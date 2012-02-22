@@ -13,7 +13,6 @@
  */
 package org.openmrs.pentaho.plugin.reporting;
 
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
@@ -30,10 +29,16 @@ public class OpenmrsReportingStepData extends BaseStepData implements StepDataIn
 
 	public RestClient restClient;
 	public RowMetaInterface outputRowMeta;
-	public Iterator<Map<String, Object>> dsdIterator;
+	public List<Map<String,Object>> dsds;
 	
 	public OpenmrsReportingStepData() {
 		super();
+	}
+	
+	public void reset() {
+		restClient = null;
+		outputRowMeta = null;
+		dsds = null;
 	}
 	
 }

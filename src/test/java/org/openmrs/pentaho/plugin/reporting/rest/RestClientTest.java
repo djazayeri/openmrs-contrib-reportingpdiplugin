@@ -28,7 +28,7 @@ public class RestClientTest {
 	@Test
 	public void shouldListDataSetDefinitions() throws Exception {
 		RestClient client = new RestClient("http://localhost:8018/openmrs18", "admin", "test");
-		List<Map<String, Object>> definitions = client.listDataSetDefinitions(null);
+		List<Map<String, Object>> definitions = client.getAllDataSetDefinitions();
 		printAsJson(definitions);
 	}
 	

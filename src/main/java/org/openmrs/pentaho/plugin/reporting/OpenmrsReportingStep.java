@@ -73,7 +73,7 @@ public class OpenmrsReportingStep extends BaseStep implements StepInterface {
      */
     @Override
     public void dispose(StepMetaInterface smi, StepDataInterface sdi) {
-        data.restClient = null;
+    	((OpenmrsReportingStepData) sdi).reset();
         super.dispose(smi, sdi);
     }
     
@@ -87,34 +87,38 @@ public class OpenmrsReportingStep extends BaseStep implements StepInterface {
     	meta = (OpenmrsReportingStepMeta) smi;
     	data = (OpenmrsReportingStepData) sdi;
     	
-        // this is an input-only step, so we're not waiting for any input (and ignoring any that exists)
-    	if (first) {
-    		first = false;
-    		try {
-    			// prepare output field structure
-    			data.outputRowMeta = (RowMetaInterface) getInputRowMeta().clone();
-    			meta.getFields(data.outputRowMeta, getStepname(), null, null, this);
-    			
-    			// hit the webservice and store the result to be processed in subsequent calls to this method
-	            data.dsdIterator = data.restClient.listDataSetDefinitions(null).iterator();
-	            if (!data.dsdIterator.hasNext())
-	            	return false;
+    	if (!first)
+    		throw new RuntimeException("Assertion failed, this should only be called once");
+    	first = false;
+        
+    	// this is an input-only step, so we're not waiting for any input (and ignoring any that exists)
+		try {
+			// prepare output field structure
+			data.outputRowMeta = (RowMetaInterface) getInputRowMeta().clone();
+			meta.getFields(data.outputRowMeta, getStepname(), null, null, this);
+			
+			// hit the webservice and store the result to be processed on the data object
+            data.dsds = data.restClient.getAllDataSetDefinitions();
+
+            // since we're not depending on any input data, we do all our output in a single call to this processRow method
+            long rowsWritten = 0;
+            for (Map<String, Object> item : data.dsds) {
+            	Object[] outputRow = RowDataUtil.allocateRowData(data.outputRowMeta.size());
+            	outputRow[0] = item.get("uuid");
+            	outputRow[1] = item.get("display");
+            	putRow(data.outputRowMeta, outputRow);
+            	++rowsWritten;
+            	
+            	if (checkFeedback(rowsWritten) && log.isBasic())
+            		logBasic("Wrote " + rowsWritten + " rows");
+            		
             }
-            catch (Exception e) {
-	            throw new KettleStepException(e);
-            }
-    	}
-    	
-    	// fetch the next item to process
-    	Map<String, Object> item = data.dsdIterator.next();
-    	
-    	// write it to the output
-    	Object[] outputRow = new Object[data.outputRowMeta.size()];
-    	outputRow[0] = item.get("uuid");
-    	outputRow[1] = item.get("display");
-    	putRow(data.outputRowMeta, outputRow);
-    	
-    	return data.dsdIterator.hasNext();
+            return false;
+        }
+        catch (Exception e) {
+            throw new KettleStepException(e);
+        }
+
     }
 	
 }

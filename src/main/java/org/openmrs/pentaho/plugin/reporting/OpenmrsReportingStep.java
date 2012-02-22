@@ -13,13 +13,13 @@
  */
 package org.openmrs.pentaho.plugin.reporting;
 
-import java.util.List;
 import java.util.Map;
 
 import org.openmrs.pentaho.plugin.reporting.rest.RestClient;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettleStepException;
 import org.pentaho.di.core.row.RowDataUtil;
+import org.pentaho.di.core.row.RowMeta;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.trans.Trans;
 import org.pentaho.di.trans.TransMeta;
@@ -62,8 +62,10 @@ public class OpenmrsReportingStep extends BaseStep implements StepInterface {
         data.restClient = new RestClient(environmentSubstitute(meta.getOpenmrsServerUrl()),
         	environmentSubstitute(meta.getUsername()), environmentSubstitute(meta.getPassword()));
         
-        if (!data.restClient.testConnection())
-        	return false;
+        if (!data.restClient.testConnection()) {
+        	logError("Failed to connect to OpenMRS server");
+        	//return false;
+        }
         
         return super.init(smi, sdi);
     }
@@ -94,7 +96,10 @@ public class OpenmrsReportingStep extends BaseStep implements StepInterface {
     	// this is an input-only step, so we're not waiting for any input (and ignoring any that exists)
 		try {
 			// prepare output field structure
-			data.outputRowMeta = (RowMetaInterface) getInputRowMeta().clone();
+			if (getInputRowMeta() != null)
+				data.outputRowMeta = (RowMetaInterface) getInputRowMeta().clone();
+			else
+				data.outputRowMeta = new RowMeta();
 			meta.getFields(data.outputRowMeta, getStepname(), null, null, this);
 			
 			// hit the webservice and store the result to be processed on the data object

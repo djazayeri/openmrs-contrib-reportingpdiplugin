@@ -9,6 +9,7 @@
    classname="org.openmrs.pentaho.plugin.reporting.OpenmrsReportingStepMeta">
 
         <libraries>
+        	<library name="${project.build.finalName}.jar"/>
             <library name="lib/*.jar"/>
         </libraries>
  

@@ -17,26 +17,40 @@ import java.util.List;
 import java.util.Map;
 
 import org.codehaus.jackson.map.ObjectMapper;
+import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
 
 /**
  *
  */
+	
 public class RestClientTest {
+	
+	RestClient client;
+	
+	@Before
+	public void before() {
+		client = new RestClient("http://localhost:8018/openmrs18", "admin", "test");
+	}
 	
 	@Test
 	public void shouldListDataSetDefinitions() throws Exception {
-		RestClient client = new RestClient("http://localhost:8018/openmrs18", "admin", "test");
 		List<Map<String, Object>> definitions = client.getAllDataSetDefinitions();
 		printAsJson(definitions);
 	}
 	
 	@Test
 	public void shouldRetrieveOneDataSetDefinition() throws Exception {
-		RestClient client = new RestClient("http://localhost:8018/openmrs18", "admin", "test");
 		SimpleObject dsd = client.getDataSetDefinition("7df8c778-2578-4573-b360-6373197d5cd1");
 		printAsJson(dsd);
+	}
+	
+	@Test
+	public void shouldTestConnection() throws Exception {
+		System.out.println("Testing Connection...");
+		Assert.assertTrue(client.testConnection());
 	}
 
     private void printAsJson(Object object) throws Exception {

@@ -23,6 +23,8 @@ import javax.ws.rs.core.MediaType;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.UniformInterfaceException;
 import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.api.client.filter.LoggingFilter;
 
@@ -98,8 +100,16 @@ public class RestClient {
     public SimpleObject getDataSetDefinition(String uuid) throws Exception {
 		WebResource resource = getResource("datasetdefinition/" + uuid);
 		resource.accept(MediaType.APPLICATION_JSON_TYPE);
-		String json = resource.get(String.class);
-		return handleJsonObject(json);
+		try {
+			String json = resource.get(String.class);
+			return handleJsonObject(json);
+		} catch (UniformInterfaceException ue) {
+			ClientResponse response = ue.getResponse();
+			if (response.getStatus() == 404)
+				return null;
+			else
+				throw ue;
+		}
     }
 
 	

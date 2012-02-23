@@ -16,7 +16,10 @@ package org.openmrs.pentaho.plugin.reporting;
 import java.util.List;
 import java.util.Map;
 
+import org.omg.CORBA.Environment;
 import org.openmrs.pentaho.plugin.reporting.rest.RestClient;
+import org.openmrs.pentaho.plugin.reporting.rest.dto.Dataset;
+import org.openmrs.pentaho.plugin.reporting.rest.dto.DatasetColumn;
 import org.pentaho.di.core.CheckResult;
 import org.pentaho.di.core.CheckResultInterface;
 import org.pentaho.di.core.Const;
@@ -50,6 +53,8 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
 	private String openmrsServerUrl;
 	private String username;
 	private String password;
+	private String cohortDefinition;
+	private String dataSetDefinition;
 	
     /**
      * @return the openmrsServerUrl
@@ -92,6 +97,34 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
     public void setPassword(String password) {
     	this.password = password;
     }
+	
+    /**
+     * @return the cohortDefinition
+     */
+    public String getCohortDefinition() {
+    	return cohortDefinition;
+    }
+
+    /**
+     * @param cohortDefinition the cohortDefinition to set
+     */
+    public void setCohortDefinition(String cohortDefinition) {
+    	this.cohortDefinition = cohortDefinition;
+    }
+
+    /**
+     * @return the dataSetDefinition
+     */
+    public String getDataSetDefinition() {
+    	return dataSetDefinition;
+    }
+	
+    /**
+     * @param dataSetDefinition the dataSetDefinition to set
+     */
+    public void setDataSetDefinition(String dataSetDefinition) {
+    	this.dataSetDefinition = dataSetDefinition;
+    }
 
 	/**
      * @see org.pentaho.di.trans.step.StepMetaInterface#check(java.util.List, org.pentaho.di.trans.TransMeta, org.pentaho.di.trans.step.StepMeta, org.pentaho.di.core.row.RowMetaInterface, java.lang.String[], java.lang.String[], org.pentaho.di.core.row.RowMetaInterface)
@@ -119,6 +152,8 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
 	    } else {
 	    	remarks.add(new CheckResult(CheckResult.TYPE_RESULT_OK, "Successfully tested Web Service", stepMeta));
 	    }
+	    
+	    // TODO: check cohortDefinition and dataSetDefinition fields
     }
 
 	/**
@@ -145,6 +180,8 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
 	    openmrsServerUrl = XMLHandler.getTagValue(stepDomNode, "openmrsServerUrl");
 	    username = XMLHandler.getTagValue(stepDomNode, "username");
 	    password = XMLHandler.getTagValue(stepDomNode, "password");
+	    cohortDefinition = XMLHandler.getTagValue(stepDomNode, "cohortDefinition");
+	    dataSetDefinition = XMLHandler.getTagValue(stepDomNode, "dataSetDefinition");
     }
 
     /**
@@ -153,12 +190,19 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
     @Override
     public String getXML() throws KettleException {
     	StringBuilder ret = new StringBuilder();
-    	ret.append("    ").append(XMLHandler.addTagValue("openmrsServerUrl", openmrsServerUrl));
-    	ret.append("    ").append(XMLHandler.addTagValue("username", username));
-    	ret.append("    ").append(XMLHandler.addTagValue("password", password));
+    	addTagValueIfNotNull(ret, "openmrsServerUrl", openmrsServerUrl);
+    	addTagValueIfNotNull(ret, "username", username);
+    	addTagValueIfNotNull(ret, "password", password);
+    	addTagValueIfNotNull(ret, "cohortDefinition", cohortDefinition);
+    	addTagValueIfNotNull(ret, "dataSetDefinition", dataSetDefinition);
     	return ret.toString();
     }
     
+    private void addTagValueIfNotNull(StringBuilder ret, String name, String value) {
+    	if (value != null)
+    		ret.append("    ").append(XMLHandler.addTagValue(name, value));
+    }
+
 	/**
      * @see org.pentaho.di.trans.step.StepMetaInterface#readRep(org.pentaho.di.repository.Repository, org.pentaho.di.repository.ObjectId, java.util.List, java.util.Map)
      */
@@ -168,6 +212,8 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
 	    openmrsServerUrl = repository.getStepAttributeString(stepIdInRepository, "openmrsServerUrl");
 	    username = repository.getStepAttributeString(stepIdInRepository, "username");
 	    password = repository.getStepAttributeString(stepIdInRepository, "password");
+	    cohortDefinition = repository.getStepAttributeString(stepIdInRepository, "cohortDefinition");
+	    dataSetDefinition = repository.getStepAttributeString(stepIdInRepository, "dataSetDefinition");
     }
 
 	/**
@@ -175,9 +221,12 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
      */
     @Override
     public void saveRep(Repository repository, ObjectId idOfTransformation, ObjectId idOfStep) throws KettleException {
+    	// TODO: is it okay to set these if they're null?
 	    repository.saveStepAttribute(idOfTransformation, idOfStep, "openmrsServerUrl", openmrsServerUrl);
 	    repository.saveStepAttribute(idOfTransformation, idOfStep, "username", username);
 	    repository.saveStepAttribute(idOfTransformation, idOfStep, "password", password);
+	    repository.saveStepAttribute(idOfTransformation, idOfStep, "cohortDefinition", cohortDefinition);
+	    repository.saveStepAttribute(idOfTransformation, idOfStep, "dataSetDefinition", dataSetDefinition);
     }
 
 	/**
@@ -198,15 +247,18 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
                           VariableSpace space) throws KettleStepException {
     	// this is an input-only step--nothing should be passed into us, but if it is, we clear it
     	inputRowMeta.clear();
-    	{
-	        ValueMetaInterface field = new ValueMeta("uuid", ValueMetaInterface.TYPE_STRING);
-	        field.setOrigin(name);
-	        inputRowMeta.addValueMeta(field);
-    	}
-    	{
-	        ValueMetaInterface field = new ValueMeta("display", ValueMetaInterface.TYPE_STRING);
-	        field.setOrigin(name);
-	        inputRowMeta.addValueMeta(field);
+    	
+    	// TODO: can we avoid evaluating the DSD? Or cache it
+    	try {
+    		RestClient client = new RestClient(openmrsServerUrl, username, password);
+    		Dataset ds = client.evaluateDataSet(space.environmentSubstitute(dataSetDefinition), space.environmentSubstitute(cohortDefinition));
+    		for (DatasetColumn column : ds.metadata.columns) {
+    			ValueMetaInterface field = new ValueMeta(column.name, Util.getValueMetaInterface(column.datatype));
+    	        field.setOrigin(name);
+    	        inputRowMeta.addValueMeta(field);
+    		}
+    	} catch (Exception ex) {
+    		return;
     	}
     }
 	

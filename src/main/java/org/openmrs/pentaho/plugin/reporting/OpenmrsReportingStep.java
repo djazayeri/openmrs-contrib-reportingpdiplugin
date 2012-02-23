@@ -13,9 +13,12 @@
  */
 package org.openmrs.pentaho.plugin.reporting;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.openmrs.pentaho.plugin.reporting.rest.RestClient;
+import org.openmrs.pentaho.plugin.reporting.rest.dto.DatasetColumn;
 import org.pentaho.di.core.exception.KettleException;
 import org.pentaho.di.core.exception.KettleStepException;
 import org.pentaho.di.core.row.RowDataUtil;
@@ -103,20 +106,23 @@ public class OpenmrsReportingStep extends BaseStep implements StepInterface {
 			meta.getFields(data.outputRowMeta, getStepname(), null, null, this);
 			
 			// hit the webservice and store the result to be processed on the data object
-            data.dsds = data.restClient.getAllDataSetDefinitions();
+            data.evaluated = data.restClient.evaluateDataSet(meta.getDataSetDefinition(), meta.getCohortDefinition());
 
             // since we're not depending on any input data, we do all our output in a single call to this processRow method
             long rowsWritten = 0;
-            for (Map<String, Object> item : data.dsds) {
+            for (Map<String, Object> row : data.evaluated.rows) {
             	Object[] outputRow = RowDataUtil.allocateRowData(data.outputRowMeta.size());
-            	outputRow[0] = item.get("uuid");
-            	outputRow[1] = item.get("display");
+            	
+            	int index = 0;
+            	for (DatasetColumn col : data.evaluated.metadata.columns) {
+            		outputRow[index] = Util.getValue(row, col);
+            		++index;
+            	}
             	putRow(data.outputRowMeta, outputRow);
             	++rowsWritten;
             	
             	if (checkFeedback(rowsWritten) && log.isBasic())
             		logBasic("Wrote " + rowsWritten + " rows");
-            		
             }
             
             setOutputDone();

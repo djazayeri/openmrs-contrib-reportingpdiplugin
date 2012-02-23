@@ -13,6 +13,7 @@
  */
 package org.openmrs.pentaho.plugin.reporting.rest;
 
+import java.io.IOException;
 import java.net.Authenticator;
 import java.net.PasswordAuthentication;
 import java.util.List;
@@ -20,7 +21,11 @@ import java.util.Map;
 
 import javax.ws.rs.core.MediaType;
 
+import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.openmrs.pentaho.plugin.reporting.rest.dto.Dataset;
+import org.pentaho.di.core.Const;
 
 import com.sun.jersey.api.client.Client;
 import com.sun.jersey.api.client.ClientResponse;
@@ -111,11 +116,24 @@ public class RestClient {
 				throw ue;
 		}
     }
-
+    
+    public Dataset evaluateDataSet(String dsdUuid, String cohortDefinitionUuid) throws Exception {
+    	WebResource resource = getResource("dataset/" + dsdUuid);
+    	if (!Const.isEmpty(cohortDefinitionUuid))
+    		resource = resource.queryParam("cohort", cohortDefinitionUuid);
+		resource.accept(MediaType.APPLICATION_JSON_TYPE);
+		String json = resource.get(String.class);
+		return handleJsonObject(json, Dataset.class);
+    }
 	
 	private static SimpleObject handleJsonObject(String json) throws Exception {
-    	return new ObjectMapper().readValue(json, SimpleObject.class);
+    	return handleJsonObject(json, SimpleObject.class);
     }
+	
+    private static <T> T handleJsonObject(String json, Class<T> clazz) throws Exception {
+    	return new ObjectMapper().readValue(json, clazz);
+    }
+
 	
 	private static List<Map<String, Object>> handleJsonList(String json) throws Exception {
 		return new ObjectMapper().readValue(json, List.class);

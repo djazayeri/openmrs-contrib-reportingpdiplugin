@@ -20,6 +20,8 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+import org.openmrs.pentaho.plugin.reporting.rest.dto.Dataset;
+import org.openmrs.pentaho.plugin.reporting.rest.dto.DatasetColumn;
 
 
 /**
@@ -45,6 +47,22 @@ public class RestClientTest {
 	public void shouldRetrieveOneDataSetDefinition() throws Exception {
 		SimpleObject dsd = client.getDataSetDefinition("7df8c778-2578-4573-b360-6373197d5cd1");
 		printAsJson(dsd);
+	}
+	
+	@Test
+	public void shouldEvaluateDataSetDefinition() throws Exception {
+		Dataset ds = client.evaluateDataSet("7df8c778-2578-4573-b360-6373197d5cd1", null);
+		printAsJson(ds);
+		for (DatasetColumn c : ds.metadata.columns) {
+			System.out.println("Column: " + c.label + " (" + c.name + ") " + c.datatype);
+		}
+		for (Map<String, Object> row : ds.rows) {
+			System.out.print("Row: ");
+			for (Map.Entry<String, Object> e : row.entrySet())
+				System.out.print(e.getKey() + ": " + e.getValue());
+			System.out.println();
+		}
+		
 	}
 	
 	@Test

@@ -38,6 +38,12 @@ public class RestClientTest {
 	}
 	
 	@Test
+	public void shouldListCohortDefinitions() throws Exception {
+		List<Map<String, Object>> definitions = client.getAllCohortDefinitions();
+		printAsJson(definitions);
+	}
+	
+	@Test
 	public void shouldListDataSetDefinitions() throws Exception {
 		List<Map<String, Object>> definitions = client.getAllDataSetDefinitions();
 		printAsJson(definitions);

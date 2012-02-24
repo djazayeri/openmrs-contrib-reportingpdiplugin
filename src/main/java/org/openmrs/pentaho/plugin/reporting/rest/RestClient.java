@@ -102,6 +102,13 @@ public class RestClient {
 		return handleJsonList(json);
 	}
 	
+    public List<Map<String, Object>> getAllCohortDefinitions() throws Exception {
+    	WebResource resource = getResource("cohortdefinition");
+		resource.accept(MediaType.APPLICATION_JSON_TYPE);
+		String json = resource.get(String.class);
+		return handleJsonList(json);
+    }
+	
     public SimpleObject getDataSetDefinition(String uuid) throws Exception {
 		WebResource resource = getResource("datasetdefinition/" + uuid);
 		resource.accept(MediaType.APPLICATION_JSON_TYPE);

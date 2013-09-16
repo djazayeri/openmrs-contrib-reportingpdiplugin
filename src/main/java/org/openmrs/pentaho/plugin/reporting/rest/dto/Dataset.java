@@ -18,7 +18,7 @@ import java.util.Map;
 
 
 /**
- *
+ * Evaluated DataSet is deserialized to this class.
  */
 public class Dataset {
 	
@@ -29,5 +29,7 @@ public class Dataset {
 	public List<Map<String, Object>> rows;
 	
 	public List links;
+
+    public String resourceVersion;
 	
 }

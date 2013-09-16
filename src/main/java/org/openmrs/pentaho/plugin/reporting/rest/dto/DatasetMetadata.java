@@ -17,7 +17,7 @@ import java.util.List;
 
 
 /**
- *
+ * MetaData description in Dataset, is deserialized to this class
  */
 public class DatasetMetadata {
 	

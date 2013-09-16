@@ -13,9 +13,7 @@
  */
 package org.openmrs.pentaho.plugin.reporting;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.openmrs.pentaho.plugin.reporting.rest.RestClient;
 import org.openmrs.pentaho.plugin.reporting.rest.dto.DatasetColumn;
@@ -32,10 +30,8 @@ import org.pentaho.di.trans.step.StepInterface;
 import org.pentaho.di.trans.step.StepMeta;
 import org.pentaho.di.trans.step.StepMetaInterface;
 
-
-
 /**
- *
+ * This class is responsible for the actual row processing when the transformation runs
  */
 public class OpenmrsReportingStep extends BaseStep implements StepInterface {
 
@@ -67,7 +63,6 @@ public class OpenmrsReportingStep extends BaseStep implements StepInterface {
         
         if (!data.restClient.testConnection()) {
         	logError("Failed to connect to OpenMRS server");
-        	//return false;
         }
         
         return super.init(smi, sdi);
@@ -81,8 +76,6 @@ public class OpenmrsReportingStep extends BaseStep implements StepInterface {
     	((OpenmrsReportingStepData) sdi).reset();
         super.dispose(smi, sdi);
     }
-    
-    
     
     /**
      * @see org.pentaho.di.trans.step.BaseStep#processRow(org.pentaho.di.trans.step.StepMetaInterface, org.pentaho.di.trans.step.StepDataInterface)
@@ -104,34 +97,81 @@ public class OpenmrsReportingStep extends BaseStep implements StepInterface {
 			else
 				data.outputRowMeta = new RowMeta();
 			meta.getFields(data.outputRowMeta, getStepname(), null, null, this);
-			
-			// hit the webservice and store the result to be processed on the data object
-            data.evaluated = data.restClient.evaluateDataSet(meta.getDataSetDefinition(), meta.getCohortDefinition());
 
-            // since we're not depending on any input data, we do all our output in a single call to this processRow method
-            long rowsWritten = 0;
-            for (Map<String, Object> row : data.evaluated.rows) {
-            	Object[] outputRow = RowDataUtil.allocateRowData(data.outputRowMeta.size());
-            	
-            	int index = 0;
-            	for (DatasetColumn col : data.evaluated.metadata.columns) {
-            		outputRow[index] = Util.getValue(row, col);
-            		++index;
-            	}
-            	putRow(data.outputRowMeta, outputRow);
-            	++rowsWritten;
-            	
-            	if (checkFeedback(rowsWritten) && log.isBasic())
-            		logBasic("Wrote " + rowsWritten + " rows");
+            // get parameters
+            Map<String,String> para=null;
+            if(meta.getParameters()!=null){
+                para=Util.getParam(meta.getParameters());
             }
-            
-            setOutputDone();
-            return false;
-        }
-        catch (Exception e) {
+			// hit the webservice and store the result to be processed on the data object
+            if(meta.getReportDefinition()==null && meta.getDataSetDefinition()==null){
+                data.evaluated = data.restClient.evaluateCohort(meta.getCohortDefinition(),para);
+
+                long rowsWritten = 0;
+                for (Map<String, Object> row : data.evaluated.members) {
+                    Object[] outputRow = RowDataUtil.allocateRowData(data.outputRowMeta.size());
+
+                    String val=(String)row.get("uuid") ;
+                    outputRow[0] = val;
+                    String val1=(String)row.get("display");
+                    outputRow[1] = val1;
+
+                    putRow(data.outputRowMeta, outputRow);
+                    ++rowsWritten;
+
+                    if (checkFeedback(rowsWritten) && log.isBasic())
+                        logBasic("Wrote " + rowsWritten + " rows");
+                }
+
+                setOutputDone();
+                return false;
+
+            }else if(meta.getReportDefinition()==null){
+                data.evaluatedd = data.restClient.evaluateDataSet(meta.getDataSetDefinition(), meta.getCohortDefinition(),para);
+                long rowsWritten = 0;
+                for (Map<String, Object> row : data.evaluatedd.rows) {
+                    Object[] outputRow = RowDataUtil.allocateRowData(data.outputRowMeta.size());
+
+                    int index = 0;
+                    for (DatasetColumn col : data.evaluatedd.metadata.columns) {
+                        outputRow[index] = Util.getValue(row, col);
+                        ++index;
+                    }
+                    putRow(data.outputRowMeta, outputRow);
+                    ++rowsWritten;
+
+                    if (checkFeedback(rowsWritten) && log.isBasic())
+                        logBasic("Wrote " + rowsWritten + " rows");
+                }
+                setOutputDone();
+                return false;
+
+            }else if(meta.getCohortDefinition()==null && meta.getDataSetDefinition()==null){
+                data.evaluateddd = data.restClient.evaluateReport(meta.getReportDefinition(),para);
+
+                long rowsWritten = 0;
+              for (Map<String, Object> row : data.evaluateddd.dataRows) {
+                  Object[] outputRow = RowDataUtil.allocateRowData(data.outputRowMeta.size());
+
+                  int index = 0;
+                  for (DatasetColumn col : data.evaluateddd.metadata.columns) {
+
+                      outputRow[index] = Util.getValue(row, col);
+                      ++index;
+                  }
+                  putRow(data.outputRowMeta, outputRow);
+                  ++rowsWritten;
+
+                  if (checkFeedback(rowsWritten) && log.isBasic())
+                      logBasic("Wrote " + rowsWritten + " rows");
+              }
+                setOutputDone();
+                return false;
+            }
+        }catch (Exception e) {
             throw new KettleStepException(e);
         }
-
+        return false;
     }
 	
 }

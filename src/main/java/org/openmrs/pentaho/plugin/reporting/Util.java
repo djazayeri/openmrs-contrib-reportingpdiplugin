@@ -33,7 +33,12 @@ public class Util {
     public static int getValueMetaInterface(String datatype) {
     	Class<?> c;
     	try {
-	    	c = Class.forName(datatype);
+            if(datatype.equals("org.openmrs.Cohort")){
+                c = Class.forName("java.lang.String");
+            }else{
+                c = Class.forName(datatype);
+            }
+
     	} catch (Exception e) {
 			throw new IllegalArgumentException("Class not found for " + datatype, e);
 		}
@@ -58,7 +63,12 @@ public class Util {
 
 	    Class<?> c;
     	try {
-	    	c = Class.forName(col.datatype);
+            if(col.datatype.equals("org.openmrs.Cohort")){
+                c = Class.forName("java.lang.String");
+            }else{
+                c = Class.forName(col.datatype);
+            }
+	    	//c = Class.forName(col.datatype);
     	} catch (Exception e) {
 			throw new IllegalArgumentException("Class not found for " + col.datatype, e);
 		}

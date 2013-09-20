@@ -16,5 +16,7 @@ public class Reportdatas {
 
     public DatasetMetadata metadata;
 
+    public List links;
+
     public String resourceVersion;
 }

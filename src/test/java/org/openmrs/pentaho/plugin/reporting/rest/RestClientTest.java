@@ -57,7 +57,7 @@ public class RestClientTest {
 	
 	@Test
 	public void shouldEvaluateDataSetDefinition() throws Exception {
-		Dataset ds = client.evaluateDataSet("5d6717cc-382a-48d2-8ae6-ea632717d733", null,null);
+		Dataset ds = client.evaluateDataSet("41469a3d-5164-4541-8cfa-43ca0dbd2224", null,null);
 		printAsJson(ds);
 		for (DatasetColumn c : ds.metadata.columns) {
 			System.out.println("Column: " + c.label + " (" + c.name + ") " + c.datatype);

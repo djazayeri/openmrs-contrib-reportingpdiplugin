@@ -105,10 +105,10 @@ public class OpenmrsReportingStep extends BaseStep implements StepInterface {
             }
 			// hit the webservice and store the result to be processed on the data object
             if(meta.getReportDefinition()==null && meta.getDataSetDefinition()==null){
-                data.evaluated = data.restClient.evaluateCohort(meta.getCohortDefinition(),para);
+                data.evaluatedCohort = data.restClient.evaluateCohort(meta.getCohortDefinition(),para);
 
                 long rowsWritten = 0;
-                for (Map<String, Object> row : data.evaluated.members) {
+                for (Map<String, Object> row : data.evaluatedCohort.members) {
                     Object[] outputRow = RowDataUtil.allocateRowData(data.outputRowMeta.size());
 
                     String val=(String)row.get("uuid") ;
@@ -127,13 +127,13 @@ public class OpenmrsReportingStep extends BaseStep implements StepInterface {
                 return false;
 
             }else if(meta.getReportDefinition()==null){
-                data.evaluatedd = data.restClient.evaluateDataSet(meta.getDataSetDefinition(), meta.getCohortDefinition(),para);
+                data.evaluatedDataSet = data.restClient.evaluateDataSet(meta.getDataSetDefinition(), meta.getCohortDefinition(),para);
                 long rowsWritten = 0;
-                for (Map<String, Object> row : data.evaluatedd.rows) {
+                for (Map<String, Object> row : data.evaluatedDataSet.rows) {
                     Object[] outputRow = RowDataUtil.allocateRowData(data.outputRowMeta.size());
 
                     int index = 0;
-                    for (DatasetColumn col : data.evaluatedd.metadata.columns) {
+                    for (DatasetColumn col : data.evaluatedDataSet.metadata.columns) {
                         outputRow[index] = Util.getValue(row, col);
                         ++index;
                     }
@@ -147,14 +147,14 @@ public class OpenmrsReportingStep extends BaseStep implements StepInterface {
                 return false;
 
             }else if(meta.getCohortDefinition()==null && meta.getDataSetDefinition()==null){
-                data.evaluateddd = data.restClient.evaluateReport(meta.getReportDefinition(),para);
+                data.evaluatedReport = data.restClient.evaluateReport(meta.getReportDefinition(),para);
 
                 long rowsWritten = 0;
-              for (Map<String, Object> row : data.evaluateddd.dataRows) {
+              for (Map<String, Object> row : data.evaluatedReport.dataRows) {
                   Object[] outputRow = RowDataUtil.allocateRowData(data.outputRowMeta.size());
 
                   int index = 0;
-                  for (DatasetColumn col : data.evaluateddd.metadata.columns) {
+                  for (DatasetColumn col : data.evaluatedReport.metadata.columns) {
 
                       outputRow[index] = Util.getValue(row, col);
                       ++index;

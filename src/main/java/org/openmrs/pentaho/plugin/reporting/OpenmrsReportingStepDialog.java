@@ -61,7 +61,6 @@ public class OpenmrsReportingStepDialog extends BaseStepDialog implements StepDi
 	private TextVar dsdWidget;
 	private Label cdLabel;
 	private TextVar cdWidget;
-	private Text dsdOptions;
     private Label rptLabel;
     private TextVar rptWidget;
 
@@ -89,7 +88,6 @@ public class OpenmrsReportingStepDialog extends BaseStepDialog implements StepDi
         ModifyListener lsMod = new ModifyListener() {
             public void modifyText(ModifyEvent e) {
                 meta.setChanged();
-                setComboValues();
             }
         };
         backupChanged = meta.hasChanged();
@@ -150,7 +148,6 @@ public class OpenmrsReportingStepDialog extends BaseStepDialog implements StepDi
         openmrsServerUrlLabel.setLayoutData(fdlOpenmrsServerUrl);
         openmrsServerUrlWidget = new TextVar(transMeta, gConnect, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
         openmrsServerUrlWidget.addModifyListener(lsMod);
-        //openmrsServerUrlWidget.setToolTipText("Tooltip");
         props.setLook(openmrsServerUrlWidget);
         FormData fdOpenmrsServerUrl = new FormData();
         fdOpenmrsServerUrl.top = new FormAttachment(0, margin);
@@ -169,7 +166,6 @@ public class OpenmrsReportingStepDialog extends BaseStepDialog implements StepDi
         usernameLabel.setLayoutData(fdlUsername);
         usernameWidget = new TextVar(transMeta, gConnect, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
         usernameWidget.addModifyListener(lsMod);
-        //usernameWidget.setToolTipText("Tooltip");
         props.setLook(usernameWidget);
         FormData fdUsername = new FormData();
         fdUsername.top = new FormAttachment(openmrsServerUrlWidget, margin);
@@ -188,7 +184,6 @@ public class OpenmrsReportingStepDialog extends BaseStepDialog implements StepDi
         passwordLabel.setLayoutData(fdlPassword);
         passwordWidget = new TextVar(transMeta, gConnect, SWT.SINGLE | SWT.LEFT | SWT.BORDER | SWT.PASSWORD);
         passwordWidget.addModifyListener(lsMod);
-        //passwordWidget.setToolTipText("Tooltip");
         props.setLook(passwordWidget);
         FormData fdPassword = new FormData();
         fdPassword.top = new FormAttachment(usernameWidget, margin);
@@ -225,7 +220,6 @@ public class OpenmrsReportingStepDialog extends BaseStepDialog implements StepDi
         dsdLabel.setLayoutData(fdlDsd);
         dsdWidget = new TextVar(transMeta, gDefinition, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
         dsdWidget.addModifyListener(lsMod);
-        //dsdWidget.setToolTipText("Tooltip");
         props.setLook(dsdWidget);
         FormData fdDsd = new FormData();
         fdDsd.top = new FormAttachment(0, margin);
@@ -244,7 +238,6 @@ public class OpenmrsReportingStepDialog extends BaseStepDialog implements StepDi
         cdLabel.setLayoutData(fdlCd);
         cdWidget = new TextVar(transMeta, gDefinition, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
         cdWidget.addModifyListener(lsMod);
-        //cdWidget.setToolTipText("Tooltip");
         props.setLook(cdWidget);
         FormData fdCd = new FormData();
         fdCd.top = new FormAttachment(dsdWidget, margin);
@@ -263,24 +256,12 @@ public class OpenmrsReportingStepDialog extends BaseStepDialog implements StepDi
         rptLabel.setLayoutData(fdlRpt);
         rptWidget = new TextVar(transMeta, gDefinition, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
         rptWidget.addModifyListener(lsMod);
-        //cdWidget.setToolTipText("Tooltip");
         props.setLook(rptWidget);
         FormData fdRpt = new FormData();
         fdRpt.top = new FormAttachment(cdWidget, margin);
         fdRpt.left = new FormAttachment(middle, 0);
         fdRpt.right = new FormAttachment(100, 0);
         rptWidget.setLayoutData(fdRpt);
-
-        
-        // dsd options (hacky)
-        dsdOptions = new Text(gDefinition, SWT.MULTI | SWT.LEFT);
-        props.setLook(dsdOptions);
-        dsdOptions.setSize(400, 300);
-        FormData fdDsdOptions = new FormData();
-        fdDsdOptions.top = new FormAttachment(rptWidget, 2*margin);
-        fdDsdOptions.left = new FormAttachment(0, 0);
-        // do I need a right?
-        dsdOptions.setLayoutData(fdDsdOptions);
         
         FormData fdDefinition = new FormData();
         fdDefinition.left = new FormAttachment(0, 0);
@@ -311,7 +292,6 @@ public class OpenmrsReportingStepDialog extends BaseStepDialog implements StepDi
         paraLabel.setLayoutData(fdlPara);
         paraWidget = new TextVar(transMeta,ParaDefinition, SWT.SINGLE | SWT.LEFT | SWT.BORDER);
         paraWidget.addModifyListener(lsMod);
-        //dsdWidget.setToolTipText("Tooltip");
         props.setLook(paraWidget);
         FormData fdPara = new FormData();
         fdPara.top = new FormAttachment(0, margin);
@@ -366,7 +346,7 @@ public class OpenmrsReportingStepDialog extends BaseStepDialog implements StepDi
         openmrsServerUrlWidget.addSelectionListener(lsDef);
         usernameWidget.addSelectionListener(lsDef);
         passwordWidget.addSelectionListener(lsDef);
-        dsdWidget.addSelectionListener(lsDef);    //by meeeeeeeeeeeee
+        dsdWidget.addSelectionListener(lsDef);
         cdWidget.addSelectionListener(lsDef);
 
         rptWidget.addSelectionListener(lsDef);
@@ -387,9 +367,6 @@ public class OpenmrsReportingStepDialog extends BaseStepDialog implements StepDi
         *************************************************/
  
         getData();
-        setComboValues();
-
-       /// populateDialog();
  
         meta.setChanged(backupChanged);
  
@@ -408,55 +385,13 @@ public class OpenmrsReportingStepDialog extends BaseStepDialog implements StepDi
     	setIfNotNull(openmrsServerUrlWidget, meta.getOpenmrsServerUrl());
     	setIfNotNull(usernameWidget, meta.getUsername());
     	setIfNotNull(passwordWidget, meta.getPassword());
-    	setIfNotNull(dsdWidget, meta.getDataSetDefinition());     // by meeeeeeeeeeeeeeeeeeeeeeeeee
+    	setIfNotNull(dsdWidget, meta.getDataSetDefinition());
     	setIfNotNull(cdWidget, meta.getCohortDefinition());
 
         setIfNotNull(rptWidget, meta.getReportDefinition());
         setIfNotNull(paraWidget, meta.getParameters());
     }
 
-    
-    // asynchronous filling of the combo boxes
-    private void setComboValues() {
-    	Runnable dsdOptionLoader = new Runnable() {
-            public void run() {
-            	try {
-	            	String url = variables.environmentSubstitute(openmrsServerUrlWidget.getText());
-	            	String user = variables.environmentSubstitute(usernameWidget.getText());
-	            	String pass = variables.environmentSubstitute(passwordWidget.getText());
-	            	RestClient client = new RestClient(url, user, pass);
-	            	StringBuilder sb = new StringBuilder();
-	            	for (Object dsd : client.getAllDataSetDefinitions()) {
-	            		sb.append(SimpleObject.path(dsd, "uuid") + ": " + SimpleObject.path(dsd, "display") + "\n");
-	            	}
-	            	if (dsdOptions != null)
-	            		dsdOptions.setText(sb.toString());
-            	} catch (Exception ex) {
-            		logBasic("Failure getting available DSDs", ex);
-            	}
-            }
-        };
-        new Thread(dsdOptionLoader).start();
-    	/*
-        Runnable fieldLoader = new Runnable() {
-            public void run() {
-                try {
-                    prevFields = transMeta.getPrevStepFields(stepname);
-                } catch (KettleException e) {
-                    prevFields = new RowMeta();
-                    String msg = BaseMessages.getString(PKG, "VoldemortDialog.DoMapping.UnableToFindInput");
-                    logError(msg);
-                }
-                String[] prevStepFieldNames = prevFields.getFieldNames();
-                Arrays.sort(prevStepFieldNames);
-                fieldColumn.setComboValues(prevStepFieldNames);
- 
-            }
-        };
-        new Thread(fieldLoader).start();
-        */
-    }   
-	
     private void setIfNotNull(TextVar widget, String valueToSet) {
     	if (valueToSet != null)
         	widget.setText(valueToSet);
@@ -470,7 +405,7 @@ public class OpenmrsReportingStepDialog extends BaseStepDialog implements StepDi
 	
 	// let the meta know about the entered data
     private void ok() {
-    	stepname = wStepname.getText(); // return value
+    	stepname = wStepname.getText();
     	
     	meta.setOpenmrsServerUrl(openmrsServerUrlWidget.getText());
     	meta.setUsername(usernameWidget.getText());

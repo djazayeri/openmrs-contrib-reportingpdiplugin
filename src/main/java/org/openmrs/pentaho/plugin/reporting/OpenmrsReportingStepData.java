@@ -29,9 +29,9 @@ public class OpenmrsReportingStepData extends BaseStepData implements StepDataIn
 
 	public RestClient restClient;
 	public RowMetaInterface outputRowMeta;
-	public Dataset evaluatedd;
-    public Reportdatas evaluateddd;
-    public CohortData evaluated;
+	public Dataset evaluatedDataSet;
+    public Reportdatas evaluatedReport;
+    public CohortData evaluatedCohort;
 	
 	public OpenmrsReportingStepData() {
 		super();
@@ -40,7 +40,9 @@ public class OpenmrsReportingStepData extends BaseStepData implements StepDataIn
 	public void reset() {
 		restClient = null;
 		outputRowMeta = null;
-		evaluated = null;
+        evaluatedCohort = null;
+        evaluatedReport =null;
+        evaluatedDataSet =null;
 	}
 	
 }

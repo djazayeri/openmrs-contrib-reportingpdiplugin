@@ -13,12 +13,8 @@
  */
 package org.openmrs.pentaho.plugin.reporting;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.StringTokenizer;
-
-import org.omg.CORBA.Environment;
 import org.openmrs.pentaho.plugin.reporting.rest.RestClient;
 import org.openmrs.pentaho.plugin.reporting.rest.dto.CohortData;
 import org.openmrs.pentaho.plugin.reporting.rest.dto.Dataset;
@@ -48,7 +44,6 @@ import org.pentaho.di.trans.step.StepMeta;
 import org.pentaho.di.trans.step.StepMetaInterface;
 import org.w3c.dom.Node;
 
-
 /**
  * This class keep track of step settings. This variables can be changed through the Dialog box
  */
@@ -59,7 +54,6 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
 	private String password;
 	private String cohortDefinition;
 	private String dataSetDefinition;
-
     private String reportDefinition;
     private String parametersValues;
 
@@ -163,8 +157,6 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
         this.parametersValues = parametersValues;
     }
 
-
-
 	/**
      * @see org.pentaho.di.trans.step.StepMetaInterface#check(java.util.List, org.pentaho.di.trans.TransMeta, org.pentaho.di.trans.step.StepMeta, org.pentaho.di.core.row.RowMetaInterface, java.lang.String[], java.lang.String[], org.pentaho.di.core.row.RowMetaInterface)
      */
@@ -191,7 +183,6 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
 	    } else {
 	    	remarks.add(new CheckResult(CheckResult.TYPE_RESULT_OK, "Successfully tested Web Service", stepMeta));
 	    }
-	    
 	    // TODO: check cohortDefinition and dataSetDefinition fields
     }
 
@@ -266,7 +257,6 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
      */
     @Override
     public void saveRep(Repository repository, ObjectId idOfTransformation, ObjectId idOfStep) throws KettleException {
-    	// TODO: is it okay to set these if they're null?
 	    repository.saveStepAttribute(idOfTransformation, idOfStep, "openmrsServerUrl", openmrsServerUrl);
 	    repository.saveStepAttribute(idOfTransformation, idOfStep, "username", username);
 	    repository.saveStepAttribute(idOfTransformation, idOfStep, "password", password);
@@ -293,8 +283,6 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
                           VariableSpace space) throws KettleStepException {
     	// this is an input-only step--nothing should be passed into us, but if it is, we clear it
     	inputRowMeta.clear();
-        String a=null;   String b=null;
-    	// TODO: can we avoid evaluating the DSD? Or cache it
     	try {
     		RestClient client = new RestClient(openmrsServerUrl, username, password);
 
@@ -312,9 +300,7 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
                 ValueMetaInterface field2 = new ValueMeta("display", Util.getValueMetaInterface("java.lang.String"));
                 field2.setOrigin(name);
                 inputRowMeta.addValueMeta(field2);
-            }
-
-            else if(getReportDefinition()==null){
+            }else if(getReportDefinition()==null){
             Dataset ds = client.evaluateDataSet(space.environmentSubstitute(dataSetDefinition), space.environmentSubstitute(cohortDefinition),para);
     		for (DatasetColumn column : ds.metadata.columns) {
     			ValueMetaInterface field = new ValueMeta(column.name, Util.getValueMetaInterface(column.datatype));
@@ -329,7 +315,6 @@ public class OpenmrsReportingStepMeta extends BaseStepMeta implements StepMetaIn
                     inputRowMeta.addValueMeta(field);
                 }
             }
-
     	} catch (Exception ex) {
     		throw new IllegalArgumentException(ex);
     	}

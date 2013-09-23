@@ -84,7 +84,8 @@ public class OpenmrsReportingStep extends BaseStep implements StepInterface {
     public boolean processRow(StepMetaInterface smi, StepDataInterface sdi) throws KettleException {
     	meta = (OpenmrsReportingStepMeta) smi;
     	data = (OpenmrsReportingStepData) sdi;
-    	
+
+        //this method should run once only
     	if (!first)
     		throw new RuntimeException("Assertion failed, this should only be called once");
     	first = false;

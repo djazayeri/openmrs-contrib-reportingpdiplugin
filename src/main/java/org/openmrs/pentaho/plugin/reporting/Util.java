@@ -17,21 +17,28 @@ import java.sql.Date;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.HashMap;
 import java.util.Map;
+import java.util.StringTokenizer;
 
 import org.openmrs.pentaho.plugin.reporting.rest.dto.DatasetColumn;
 import org.pentaho.di.core.row.ValueMetaInterface;
 
 
 /**
- *
+ * Utility functions for row processing.
  */
 public class Util {
 
     public static int getValueMetaInterface(String datatype) {
     	Class<?> c;
     	try {
-	    	c = Class.forName(datatype);
+            if(datatype.equals("org.openmrs.Cohort")){
+                c = Class.forName("java.lang.String");
+            }else{
+                c = Class.forName(datatype);
+            }
+
     	} catch (Exception e) {
 			throw new IllegalArgumentException("Class not found for " + datatype, e);
 		}
@@ -43,8 +50,10 @@ public class Util {
 	    	return ValueMetaInterface.TYPE_NUMBER;
 	    } else if (Date.class.equals(c) || java.sql.Timestamp.class.equals(c)) {
 	    	return ValueMetaInterface.TYPE_DATE;
-	    }
-	    throw new IllegalArgumentException("Unrecognized datatype: " + datatype);
+	    }else if (Long.class.equals(c)) {
+            return ValueMetaInterface.TYPE_INTEGER;
+        }
+        throw new IllegalArgumentException("Unrecognized datatype: " + datatype);
     }
 
     public static Object getValue(Map<String, Object> row, DatasetColumn col) throws Exception {
@@ -54,7 +63,12 @@ public class Util {
 
 	    Class<?> c;
     	try {
-	    	c = Class.forName(col.datatype);
+            if(col.datatype.equals("org.openmrs.Cohort")){
+                c = Class.forName("java.lang.String");
+            }else{
+                c = Class.forName(col.datatype);
+            }
+	    	//c = Class.forName(col.datatype);
     	} catch (Exception e) {
 			throw new IllegalArgumentException("Class not found for " + col.datatype, e);
 		}
@@ -71,8 +85,27 @@ public class Util {
 	    } else if (Date.class.equals(c) || java.sql.Timestamp.class.equals(c)) {
 	    	// this comes as a "yyyy-mm-dd" string
 	    	return ymd.parse((String) val); 
-	    }
+	    }else if(Long.class.equals(c)){
+            Integer m=(Integer)val;
+            return new Long(m.intValue());
+        }
 	    throw new IllegalArgumentException("Unrecognized datatype: " + col.datatype);
+    }
+    
+    public static Map<String,String> getParam(String paraString){
+
+        Map<String,String> para=new HashMap<String,String>();
+        StringTokenizer st2 = new StringTokenizer(paraString, ";");
+
+        while (st2.hasMoreElements()) {
+            String j=(String)st2.nextElement();
+            StringTokenizer st = new StringTokenizer(j, "=");
+            String key=(String)st.nextElement();
+            String value=(String)st.nextElement();
+
+            para.put(key, value);
+        }
+        return para;
     }
 	
 }

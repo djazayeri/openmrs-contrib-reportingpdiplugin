@@ -34,9 +34,9 @@ public class RestClientTest {
 	
 	@Before
 	public void before() {
-		client = new RestClient("http://localhost:8018/openmrs18", "admin", "test");
+		client = new RestClient("http://localhost:8081/openmrs-standalone", "admin", "test");
 	}
-	
+
 	@Test
 	public void shouldListCohortDefinitions() throws Exception {
 		List<Map<String, Object>> definitions = client.getAllCohortDefinitions();
@@ -57,7 +57,7 @@ public class RestClientTest {
 	
 	@Test
 	public void shouldEvaluateDataSetDefinition() throws Exception {
-		Dataset ds = client.evaluateDataSet("7df8c778-2578-4573-b360-6373197d5cd1", null);
+		Dataset ds = client.evaluateDataSet("41469a3d-5164-4541-8cfa-43ca0dbd2224", null,null);
 		printAsJson(ds);
 		for (DatasetColumn c : ds.metadata.columns) {
 			System.out.println("Column: " + c.label + " (" + c.name + ") " + c.datatype);
@@ -76,6 +76,11 @@ public class RestClientTest {
 		System.out.println("Testing Connection...");
 		Assert.assertTrue(client.testConnection());
 	}
+
+    @Test
+    public void my() throws Exception {
+        System.out.println("Testing Connection...");
+    }
 
     private void printAsJson(Object object) throws Exception {
     	new ObjectMapper().writeValue(System.out, object);

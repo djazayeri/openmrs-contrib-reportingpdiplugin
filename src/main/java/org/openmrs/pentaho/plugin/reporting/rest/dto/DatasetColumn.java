@@ -15,7 +15,7 @@ package org.openmrs.pentaho.plugin.reporting.rest.dto;
 
 
 /**
- *
+ * DatasetColumn details in the DatasetColumn, is deserialized to this class
  */
 public class DatasetColumn {
 

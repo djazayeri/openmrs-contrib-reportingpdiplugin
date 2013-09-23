@@ -22,9 +22,12 @@ import java.util.Map;
 import javax.ws.rs.core.MediaType;
 
 import org.codehaus.jackson.JsonParseException;
+import org.codehaus.jackson.map.DeserializationConfig;
 import org.codehaus.jackson.map.JsonMappingException;
 import org.codehaus.jackson.map.ObjectMapper;
+import org.openmrs.pentaho.plugin.reporting.rest.dto.CohortData;
 import org.openmrs.pentaho.plugin.reporting.rest.dto.Dataset;
+import org.openmrs.pentaho.plugin.reporting.rest.dto.Reportdatas;
 import org.pentaho.di.core.Const;
 
 import com.sun.jersey.api.client.Client;
@@ -35,7 +38,7 @@ import com.sun.jersey.api.client.filter.LoggingFilter;
 
 
 /**
- *
+ * RestClient to consume OpenMRS Reporting.REST web services
  */
 public class RestClient {
 
@@ -78,7 +81,7 @@ public class RestClient {
 	}
 	
 	private WebResource getReportingResource() {
-		return client.resource(rootUrl + "/ws/rest/reporting");
+		return client.resource(rootUrl + "/ws/rest/v1/reportingrest");
 	}
 	
 	private WebResource getResource(String resourceName) {
@@ -97,9 +100,9 @@ public class RestClient {
 	
 	public List<Map<String, Object>> getAllDataSetDefinitions() throws Exception {
 		WebResource resource = getResource("datasetdefinition");
-		resource.accept(MediaType.APPLICATION_JSON_TYPE);
-		String json = resource.get(String.class);
-		return handleJsonList(json);
+        ClientResponse response = resource.accept("application/json").get(ClientResponse.class);
+        String output = response.getEntity(String.class);
+        return handleJsonList(output);
 	}
 	
     public List<Map<String, Object>> getAllCohortDefinitions() throws Exception {
@@ -124,13 +127,46 @@ public class RestClient {
 		}
     }
     
-    public Dataset evaluateDataSet(String dsdUuid, String cohortDefinitionUuid) throws Exception {
+    public Dataset evaluateDataSet(String dsdUuid, String cohortDefinitionUuid,Map<String,String> para) throws Exception {
     	WebResource resource = getResource("dataset/" + dsdUuid);
+
+        if(para!=null){
+            for (Map.Entry<String,String> entry : para.entrySet())
+            {
+                resource = resource.queryParam(entry.getKey(),entry.getValue());
+            }
+        }
     	if (!Const.isEmpty(cohortDefinitionUuid))
     		resource = resource.queryParam("cohort", cohortDefinitionUuid);
 		resource.accept(MediaType.APPLICATION_JSON_TYPE);
 		String json = resource.get(String.class);
 		return handleJsonObject(json, Dataset.class);
+    }
+
+    public Reportdatas evaluateReport(String rptUuid,Map<String,String> para) throws Exception {
+        WebResource resource = getResource("report/" + rptUuid);
+        if(para!=null){
+            for (Map.Entry<String,String> entry : para.entrySet())
+            {
+                resource = resource.queryParam(entry.getKey(),entry.getValue());
+            }
+        }
+        resource.accept(MediaType.APPLICATION_JSON_TYPE);
+        String json = resource.get(String.class);
+        return handleJsonObject(json, Reportdatas.class);
+    }
+
+    public CohortData evaluateCohort(String rptUuid,Map<String,String> para) throws Exception {
+        WebResource resource = getResource("cohort/" + rptUuid);
+        if(para!=null){
+            for (Map.Entry<String,String> entry : para.entrySet()){
+                 resource = resource.queryParam(entry.getKey(),entry.getValue());
+            }
+        }
+
+        resource.accept(MediaType.APPLICATION_JSON_TYPE);
+        String json = resource.get(String.class);
+        return handleJsonObject(json, CohortData.class);
     }
 	
 	private static SimpleObject handleJsonObject(String json) throws Exception {
@@ -143,7 +179,9 @@ public class RestClient {
 
 	
 	private static List<Map<String, Object>> handleJsonList(String json) throws Exception {
-		return new ObjectMapper().readValue(json, List.class);
+        ObjectMapper m=new ObjectMapper();
+        m.configure(DeserializationConfig.Feature.ACCEPT_SINGLE_VALUE_AS_ARRAY, true);
+        return m.readValue(json, List.class);
 	}
 	
 	private static List<Map<String, Object>> handleSearchResults(String json) throws Exception {
@@ -164,5 +202,4 @@ public class RestClient {
 	    }
 	    return true;
     }
-	
 }

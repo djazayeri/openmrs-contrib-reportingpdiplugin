@@ -14,20 +14,24 @@
 package org.openmrs.pentaho.plugin.reporting;
 
 import org.openmrs.pentaho.plugin.reporting.rest.RestClient;
+import org.openmrs.pentaho.plugin.reporting.rest.dto.CohortData;
 import org.openmrs.pentaho.plugin.reporting.rest.dto.Dataset;
+import org.openmrs.pentaho.plugin.reporting.rest.dto.Reportdatas;
 import org.pentaho.di.core.row.RowMetaInterface;
 import org.pentaho.di.trans.step.BaseStepData;
 import org.pentaho.di.trans.step.StepDataInterface;
 
 
 /**
- *
+ * This class store processing state, and cache tables
  */
 public class OpenmrsReportingStepData extends BaseStepData implements StepDataInterface {
 
 	public RestClient restClient;
 	public RowMetaInterface outputRowMeta;
-	public Dataset evaluated;
+	public Dataset evaluatedDataSet;
+    public Reportdatas evaluatedReport;
+    public CohortData evaluatedCohort;
 	
 	public OpenmrsReportingStepData() {
 		super();
@@ -36,7 +40,9 @@ public class OpenmrsReportingStepData extends BaseStepData implements StepDataIn
 	public void reset() {
 		restClient = null;
 		outputRowMeta = null;
-		evaluated = null;
+        evaluatedCohort = null;
+        evaluatedReport =null;
+        evaluatedDataSet =null;
 	}
 	
 }
